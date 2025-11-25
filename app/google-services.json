@@ -1,0 +1,29 @@
+{
+  "project_info": {
+    "project_number": "610796678576",
+    "project_id": "auditorylearnerlab",
+    "storage_bucket": "auditorylearnerlab.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:610796678576:android:d8c56e2e94ba80f4ce7a75",
+        "android_client_info": {
+          "package_name": "week11.st465546.auditorylearnerlab"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyCUW2dRZxvoOg9uWNdfUzD74xKGfH8cOYU"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
