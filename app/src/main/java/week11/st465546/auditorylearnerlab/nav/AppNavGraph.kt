@@ -1,27 +1,28 @@
 package week11.st465546.auditorylearnerlab.nav
 
 import androidx.compose.runtime.Composable
+import androidx.lifecycle.ViewModel
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
-import week11.st465546.auditorylearnerlab.auth.ViewModel
+import week11.st465546.auditorylearnerlab.auth.AuthViewModel
 import week11.st465546.auditorylearnerlab.screens.ForgotPasswordScreen
 import week11.st465546.auditorylearnerlab.screens.LoginScreen
 import week11.st465546.auditorylearnerlab.screens.RegisterScreen
 import week11.st465546.auditorylearnerlab.screens.HomeScreen
 
 object Routes {
-    const val LOGIN = "login"
-    const val REGISTER = "register"
-    const val FORGOT = "forgot"
-    const val HOME = "home"
+    const val LOGIN = "login" //login page
+    const val REGISTER = "register" //sign up page
+    const val FORGOT = "forgot" //forgot password page
+    const val HOME = "home" //home page
 }
 
 @Composable
-fun AppNavGraph(viewModel: ViewModel) {
+fun AppNavGraph(vm: AuthViewModel) {
     val navController = rememberNavController()
 
-    val startDestination = if (viewModel.isUserLoggedIn()) {
+    val startDestination = if (vm.isUserLoggedIn()) {
         Routes.HOME
     } else {
         Routes.LOGIN
@@ -30,21 +31,21 @@ fun AppNavGraph(viewModel: ViewModel) {
     NavHost(navController = navController, startDestination = startDestination) {
 
         composable(Routes.LOGIN) {
-            LoginScreen(viewModel, navController)
+            LoginScreen(vm, navController)
         }
 
         composable(Routes.REGISTER) {
-            RegisterScreen(viewModel, navController)
+            RegisterScreen(vm, navController)
         }
 
         composable(Routes.FORGOT) {
-            ForgotPasswordScreen(viewModel, navController)
+            ForgotPasswordScreen(vm, navController)
         }
 
         composable(Routes.HOME) {
             HomeScreen(
                 onLogout = {
-                    viewModel.logout()
+                    vm.logout()
                     navController.navigate(Routes.LOGIN) {
                         popUpTo(0)
                     }

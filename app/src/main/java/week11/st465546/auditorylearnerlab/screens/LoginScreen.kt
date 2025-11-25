@@ -6,13 +6,13 @@ import androidx.compose.runtime.*
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
 import androidx.navigation.NavController
-import week11.st465546.auditorylearnerlab.auth.ViewModel
+import week11.st465546.auditorylearnerlab.auth.AuthViewModel
 import week11.st465546.auditorylearnerlab.nav.Routes
 import week11.st465546.auditorylearnerlab.components.AppButton
 import week11.st465546.auditorylearnerlab.components.AppTextField
 
 @Composable
-fun LoginScreen(vm: ViewModel, nav: NavController) {
+fun LoginScreen(vm: AuthViewModel, nav: NavController) {
     val state = vm.state.collectAsState().value
 
     Column(
@@ -25,6 +25,7 @@ fun LoginScreen(vm: ViewModel, nav: NavController) {
 
         Spacer(Modifier.height(20.dp))
 
+        //Reusable Component
         AppTextField(
             label = "Email",
             value = state.email,

@@ -6,10 +6,12 @@ import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.launch
 
-class ViewModel(
+class AuthViewModel(//changed the name of ViewModel as it was conflicting with Androids class name -Mariah
+    //calling the repository and instances
     private val repo: Repository = Repository()
 ) : ViewModel() {
 
+    //Calling the uiState
     private val _state = MutableStateFlow(AuthUiState())
     val state: StateFlow<AuthUiState> = _state
 
