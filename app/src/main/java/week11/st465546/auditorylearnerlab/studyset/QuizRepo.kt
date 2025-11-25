@@ -28,10 +28,14 @@ class QuizRepo {
 
         val listener = db.collection("quizzes")
             .whereEqualTo("ownerId", uid)
-            .addSnapshotListener { snap, _ ->
+            .addSnapshotListener { snap, e ->
+
                 val quizzes = snap?.toObjects(Quiz::class.java)?.mapIndexed { i, q ->
+                    println("🔥 Parsed quiz before adding ID: $q")
                     q.copy(id = snap.documents[i].id)
                 } ?: emptyList()
+
+
                 trySend(quizzes)
             }
 

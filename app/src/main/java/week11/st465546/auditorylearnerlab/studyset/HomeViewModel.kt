@@ -18,6 +18,7 @@ class HomeViewModel( private val repo: QuizRepo = QuizRepo() ): ViewModel() {
 
     init {
         viewModelScope.launch {
+            println("🔥 Current UID = ${repo.getCurrentUser()?.uid}")
             repo.getUserQuizzes().collect {
                 _quizzes.value = it
             }
