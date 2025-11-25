@@ -75,5 +75,4 @@ class HomeViewModel( private val repo: QuizRepo = QuizRepo() ): ViewModel() {
         }
     }
 
-
 }
