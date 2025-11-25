@@ -21,8 +21,8 @@ class MainActivity : ComponentActivity() {
                     color = MaterialTheme.colorScheme.background
                 ) {
                     val vm: AuthViewModel = viewModel()
-                    val quizVm: HomeViewModel = viewModel()
-                    AppNavGraph(vm, quizVm)
+                    //val quizVm: HomeViewModel = viewModel()
+                    AppNavGraph(vm)
                 }
             }
         }

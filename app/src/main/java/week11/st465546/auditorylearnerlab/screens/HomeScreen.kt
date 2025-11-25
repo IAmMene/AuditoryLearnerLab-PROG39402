@@ -42,6 +42,15 @@ fun HomeScreen(
                     Column(Modifier.padding(12.dp)) {
                         Text(quiz.title, fontWeight = FontWeight.Bold)
                         Text("${quiz.questions.size} questions")
+
+                        Spacer(Modifier.height(8.dp))
+
+                        Button(
+                            onClick = { viewModel.deleteQuiz(quiz.id) },
+                            colors = ButtonDefaults.buttonColors(containerColor = Color.Red)
+                        ) {
+                            Text("Delete")
+                        }
                     }
                 }
             }

@@ -50,4 +50,12 @@ class QuizRepo {
         } catch (e: Exception) {
             Result.failure(e)
         }
+
+    suspend fun deleteQuiz(quizId: String): Result<Unit> =
+        try {
+            db.collection("quizzes").document(quizId).delete().await()
+            Result.success(Unit)
+        } catch (e: Exception) {
+            Result.failure(e)
+        }
 }

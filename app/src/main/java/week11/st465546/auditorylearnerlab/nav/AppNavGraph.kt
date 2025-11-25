@@ -25,7 +25,7 @@ object Routes {
 }
 
 @Composable
-fun AppNavGraph(vmAuth: AuthViewModel, vmHome: HomeViewModel) {
+fun AppNavGraph(vmAuth: AuthViewModel) {
     val navController = rememberNavController()
 
     val startDestination = if (vmAuth.isUserLoggedIn()) {
@@ -49,6 +49,7 @@ fun AppNavGraph(vmAuth: AuthViewModel, vmHome: HomeViewModel) {
         }
 
         composable(Routes.HOME) {
+            val vmHome: HomeViewModel = androidx.lifecycle.viewmodel.compose.viewModel()
             HomeScreen(
                 onLogout = {
                     vmAuth.logout()
@@ -62,6 +63,8 @@ fun AppNavGraph(vmAuth: AuthViewModel, vmHome: HomeViewModel) {
             )
         }
         composable(Routes.CREATE_QUIZ) {
+            val vmHome: HomeViewModel = androidx.lifecycle.viewmodel.compose.viewModel()
+
             CreateQuizScreen(vmHome, navController)
         }
     }

@@ -21,6 +21,8 @@ class HomeViewModel( private val repo: QuizRepo = QuizRepo() ): ViewModel() {
             println("🔥 Current UID = ${repo.getCurrentUser()?.uid}")
             repo.getUserQuizzes().collect {
                 _quizzes.value = it
+                println("🔥 QUIZ SNAPSHOT:")
+                it.forEach { q -> println(q) }
             }
         }
     }
@@ -52,7 +54,7 @@ class HomeViewModel( private val repo: QuizRepo = QuizRepo() ): ViewModel() {
                 title = state.title,
                 questions = state.questions
             )
-
+            println("🔥 SAVING QUIZ = $quiz")
             val result = repo.saveQuiz(quiz)
             _ui.value = _ui.value.copy(loading = false)
 
@@ -60,5 +62,18 @@ class HomeViewModel( private val repo: QuizRepo = QuizRepo() ): ViewModel() {
             else _ui.value = _ui.value.copy(error = result.exceptionOrNull()?.message)
         }
     }
+
+    fun deleteQuiz(quizId: String) {
+        viewModelScope.launch {
+            val result = repo.deleteQuiz(quizId)
+            if (result.isFailure) {
+                _ui.value = _ui.value.copy(
+                    error = result.exceptionOrNull()?.message
+                )
+            }
+            // No need to update _quizzes manually — snapshot listener auto-updates
+        }
+    }
+
 
 }
