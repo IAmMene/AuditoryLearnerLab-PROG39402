@@ -15,6 +15,9 @@ import week11.st465546.auditorylearnerlab.model.Quiz
 import week11.st465546.auditorylearnerlab.tts.TTSManager
 import week11.st465546.auditorylearnerlab.speech.SpeechRecognitionManager
 import android.speech.tts.TextToSpeech
+import androidx.activity.compose.rememberLauncherForActivityResult
+import androidx.activity.result.contract.ActivityResultContracts
+import android.Manifest
 
 @Composable
 fun TakeQuizScreen(
@@ -30,6 +33,18 @@ fun TakeQuizScreen(
     var isAnswerCorrect by remember { mutableStateOf<Boolean?>(null) }
     val speechState by speechManager.state.collectAsState()
     val coroutineScope = rememberCoroutineScope()
+    //Permission launcher
+    val permissionLauncher = rememberLauncherForActivityResult(
+        contract = ActivityResultContracts.RequestPermission(),
+        onResult = { isGranted ->
+            if (isGranted) {
+                speechManager.startListening()
+            } else {
+                // Handle denial
+                println("Permission denied")
+            }
+        }
+    )
 
     //Define the reset function to clear previous answers
     fun resetAnswerState() {
@@ -201,7 +216,13 @@ fun TakeQuizScreen(
                         if (speechState.isListening) {
                             speechManager.stopListening()
                         } else {
-                            speechManager.startListening()
+                            // Check if we need to ask for permission first
+                            if (speechManager.checkPermission()) {
+                                speechManager.startListening()
+                            } else {
+                                // ASK for permission
+                                permissionLauncher.launch(Manifest.permission.RECORD_AUDIO)
+                            }
                         }
                     },
                     modifier = Modifier.fillMaxWidth()
