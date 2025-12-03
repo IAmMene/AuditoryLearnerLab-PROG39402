@@ -17,6 +17,7 @@ import week11.st465546.auditorylearnerlab.studyset.HomeViewModel
 fun HomeScreen(
     onLogout: () -> Unit,
     onCreateQuiz: () -> Unit,
+    onTakeQuiz: (String) -> Unit,
     viewModel: HomeViewModel
 ) {
     val quizzes by viewModel.quizzes.collectAsState()
@@ -33,6 +34,7 @@ fun HomeScreen(
         Spacer(Modifier.height(16.dp))
 
         Text("Your Study Sets", style = MaterialTheme.typography.headlineSmall)
+
 
         LazyColumn {
             items(quizzes) { quiz ->
@@ -66,9 +68,33 @@ fun HomeScreen(
 
                         Spacer(Modifier.height(8.dp))
 
+                        Row(
+                            horizontalArrangement = Arrangement.SpaceEvenly,
+                            modifier = Modifier.fillMaxWidth()
+                        ) {
+                            Button(
+                                onClick = { onTakeQuiz(quiz.id) },
+                                modifier = Modifier.weight(1f)
+                            ) {
+                                Text("Take Quiz")
+                            }
+
+                            Spacer(Modifier.width(8.dp))
+
+//                            Button(
+//                                onClick = { onViewFlashCards(quiz.id) },
+//                                modifier = Modifier.weight(1f)
+//                            ) {
+//                                Text("Flash Cards")
+//                            }
+                        }
+
+                        Spacer(Modifier.height(8.dp))
+
                         Button(
                             onClick = { viewModel.deleteQuiz(quiz.id) },
-                            colors = ButtonDefaults.buttonColors(containerColor = Color.Red)
+                            colors = ButtonDefaults.buttonColors(containerColor = Color.Red),
+                            modifier = Modifier.fillMaxWidth()
                         ) {
                             Text("Delete")
                         }
