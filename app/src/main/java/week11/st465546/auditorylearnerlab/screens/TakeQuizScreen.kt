@@ -14,6 +14,7 @@ import week11.st465546.auditorylearnerlab.model.Question
 import week11.st465546.auditorylearnerlab.model.Quiz
 import week11.st465546.auditorylearnerlab.tts.TTSManager
 import week11.st465546.auditorylearnerlab.speech.SpeechRecognitionManager
+import android.speech.tts.TextToSpeech
 
 @Composable
 fun TakeQuizScreen(
@@ -112,8 +113,15 @@ fun TakeQuizScreen(
                         Button(
                             onClick = {
                                 coroutineScope.launch {
+                                    // 1. Speak the intro phrase (Flushing any previous audio)
+                                    ttsManager.speak("Here are the options:", queueMode = TextToSpeech.QUEUE_FLUSH)
+
+                                    // 2. Loop through options and ADD them to the queue
                                     question.options.forEachIndexed { index, option ->
-                                        ttsManager.speak("Option ${index + 1}: $option")
+                                        ttsManager.speak(
+                                            text = "Option ${index + 1}: $option",
+                                            queueMode = TextToSpeech.QUEUE_ADD // Ensures they play sequentially
+                                        )
                                     }
                                 }
                             }

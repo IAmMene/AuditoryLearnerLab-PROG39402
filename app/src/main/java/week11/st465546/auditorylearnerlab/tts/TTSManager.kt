@@ -49,19 +49,17 @@ class TTSManager(context: Context) {
         }
     }
 
-    suspend fun speak(text: String, utteranceId: String = "default") {
+    suspend fun speak(
+        text: String,
+        utteranceId: String = "default",
+        queueMode: Int = TextToSpeech.QUEUE_FLUSH
+    ) {
         if (!isInitialized) {
-            waitForInitialization() //wait for initiliaztion to complete before performing speech
+            waitForInitialization()
         }
-//perform speech
-        tts?.speak(text, TextToSpeech.QUEUE_FLUSH, null, utteranceId)
+        // perform speech using the passed queueMode
+        tts?.speak(text, queueMode, null, utteranceId)
     }
-
-//    fun speakNonBlocking(text: String, utteranceId: String = "default") {
-//        if (isInitialized) {
-//            tts?.speak(text, TextToSpeech.QUEUE_FLUSH, null, utteranceId)
-//        }
-//    }
 
     //adjust speaking speed
     fun setSpeechRate(rate: Float) {
