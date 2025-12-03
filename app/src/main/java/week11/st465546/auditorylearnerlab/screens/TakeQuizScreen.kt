@@ -31,6 +31,22 @@ fun TakeQuizScreen(
     val speechState by speechManager.state.collectAsState()
     val coroutineScope = rememberCoroutineScope()
 
+    //Define the reset function to clear previous answers
+    fun resetAnswerState() {
+        isAnswerCorrect = null
+        userAnswer = ""
+    }
+
+    //Define the check function to update the UI
+    fun checkAnswer(answerToCheck: String, question: Question) {
+        val correctAnswer = question.options.getOrNull(question.correctIndex)
+        // Check if the answer matches (ignoring case)
+        val isCorrect = answerToCheck.trim().equals(correctAnswer, ignoreCase = true)
+
+        // Update the state -> This triggers the UI to show Green/Red box
+        isAnswerCorrect = isCorrect
+    }
+
     val currentQuestion = quiz.questions.getOrNull(currentQuestionIndex)
 
     // Handle speech recognition results
@@ -347,14 +363,4 @@ fun TakeQuizScreen(
             speechManager.destroy()
         }
     }
-}
-
-private fun checkAnswer(userAnswer: String, question: Question) {
-    val correctAnswer = question.options.getOrNull(question.correctIndex)
-    val isCorrect = userAnswer.equals(correctAnswer, ignoreCase = true)
-    // Update your ViewModel or state here
-}
-
-private fun resetAnswerState() {
-    // Reset answer state
 }
