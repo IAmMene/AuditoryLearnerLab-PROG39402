@@ -132,20 +132,6 @@ fun QuizResultsScreen(
                     horizontalArrangement = Arrangement.spacedBy(12.dp)
                 ) {
                     Button(
-                        onClick = {
-                            coroutineScope.launch {
-                                val message = "You scored $percentage percent on ${quiz.title}. " +
-                                        "You got $correctCount out of $totalQuestions questions correct. " +
-                                        performanceMessage
-                                ttsManager.speak(message)
-                            }
-                        },
-                        modifier = Modifier.weight(1f)
-                    ) {
-                        Text("Hear Results")
-                    }
-
-                    Button(
                         onClick = onBack,
                         modifier = Modifier.weight(1f)
                     ) {

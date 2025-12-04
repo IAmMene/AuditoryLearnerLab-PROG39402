@@ -116,7 +116,7 @@ class HomeViewModel( private val repo: QuizRepo = QuizRepo() ): ViewModel() {
                 questions = state.questions
             )
             println("🔥 SAVING QUIZ = $quiz") //debugger to print if the quiz is saved with ID
-            val result = repo.saveQuiz(quiz)
+           // val result = repo.saveQuiz(quiz)
             // If ID exists, we are updating if ID is empty we are creating
             val result = if (state.id.isNotBlank()) {
                 val updatedQuiz = Quiz(
