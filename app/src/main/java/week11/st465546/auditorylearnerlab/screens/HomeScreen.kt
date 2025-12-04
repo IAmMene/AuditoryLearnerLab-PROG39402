@@ -3,8 +3,6 @@ package week11.st465546.auditorylearnerlab.screens
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
-import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.Delete
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Modifier
@@ -35,7 +33,6 @@ fun HomeScreen(
 
         Text("Your Study Sets", style = MaterialTheme.typography.headlineSmall)
 
-
         LazyColumn {
             items(quizzes) { quiz ->
                 Card(
@@ -43,31 +40,16 @@ fun HomeScreen(
                         .fillMaxWidth()
                         .padding(vertical = 6.dp)
                 ) {
-                    // Use a Row to arrange text and button horizontally
-                    Row(
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .padding(12.dp),
-                        horizontalArrangement = Arrangement.SpaceBetween, // Pushes elements to edges
-                        verticalAlignment = androidx.compose.ui.Alignment.CenterVertically
-                    ) {
-                        // Column for Title and Question count
-                        Column(modifier = Modifier.weight(1f)) {
-                            Text(quiz.title, fontWeight = FontWeight.Bold)
-                            Text("${quiz.questions.size} questions")
-                        }
+                    // Switched from Row to Column
+                    Column(Modifier.padding(12.dp)) {
 
-                        // The Delete Button
-                        IconButton(onClick = { viewModel.deleteQuiz(quiz.id) }) {
-                            Icon(
-                                imageVector = Icons.Default.Delete,
-                                contentDescription = "Delete Quiz",
-                                tint = MaterialTheme.colorScheme.error // Makes icon red
-                            )
-                        }
+                        // Title and Question Count
+                        Text(quiz.title, fontWeight = FontWeight.Bold)
+                        Text("${quiz.questions.size} questions")
 
                         Spacer(Modifier.height(8.dp))
 
+                        // The Take Quiz Button is in its own Row
                         Row(
                             horizontalArrangement = Arrangement.SpaceEvenly,
                             modifier = Modifier.fillMaxWidth()
@@ -81,16 +63,12 @@ fun HomeScreen(
 
                             Spacer(Modifier.width(8.dp))
 
-//                            Button(
-//                                onClick = { onViewFlashCards(quiz.id) },
-//                                modifier = Modifier.weight(1f)
-//                            ) {
-//                                Text("Flash Cards")
-//                            }
                         }
 
                         Spacer(Modifier.height(8.dp))
 
+                        // The Big Red Delete Button
+                        // This replaces the "Icon" button in the previous version
                         Button(
                             onClick = { viewModel.deleteQuiz(quiz.id) },
                             colors = ButtonDefaults.buttonColors(containerColor = Color.Red),
