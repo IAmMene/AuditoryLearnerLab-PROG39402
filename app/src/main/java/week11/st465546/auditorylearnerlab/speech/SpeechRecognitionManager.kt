@@ -1,5 +1,12 @@
 package week11.st465546.auditorylearnerlab.speech
 
+
+/**
+ * SpeechRecognitionManager.kt
+ * Code for speech recognition manager
+ *
+ *
+ */
 import android.Manifest
 import android.content.Context
 import android.content.Intent
@@ -18,10 +25,14 @@ import java.util.Locale
 class SpeechRecognitionManager(
     private val context: Context
 ) {
-    private var speechRecognizer: SpeechRecognizer? = null
-    private val _state = MutableStateFlow(SpeechRecognitionState())
+    private var speechRecognizer: SpeechRecognizer? = null //initalize speech recognizer
+    private val _state = MutableStateFlow(SpeechRecognitionState()) //store current state
     val state: StateFlow<SpeechRecognitionState> = _state
 
+    /**
+     * Check that the recognizer has been initialized
+     * if its not available then throw an error
+     */
     init {
         if (SpeechRecognizer.isRecognitionAvailable(context)) {
             speechRecognizer = SpeechRecognizer.createSpeechRecognizer(context).apply {
@@ -34,6 +45,9 @@ class SpeechRecognitionManager(
         }
     }
 
+    /**
+     * Check the permissions of the microphone returns true or false if its granted
+     */
     fun checkPermission(): Boolean {
         return ContextCompat.checkSelfPermission(
             context,
@@ -41,6 +55,10 @@ class SpeechRecognitionManager(
         ) == PackageManager.PERMISSION_GRANTED
     }
 
+    /**
+     * Checks Permissions
+     * If its provided, then start listening if the speech recongition is available
+     */
     fun startListening() {
         if (!checkPermission()) {
             _state.value = _state.value.copy(
@@ -58,21 +76,27 @@ class SpeechRecognitionManager(
             return
         }
 
+        /**
+         * This is the code that tells Android how to capture speech
+         */
         val intent = Intent(RecognizerIntent.ACTION_RECOGNIZE_SPEECH).apply {
-            putExtra(RecognizerIntent.EXTRA_LANGUAGE_MODEL, RecognizerIntent.LANGUAGE_MODEL_FREE_FORM)
-            putExtra(RecognizerIntent.EXTRA_LANGUAGE, Locale.getDefault())
-            putExtra(RecognizerIntent.EXTRA_PROMPT, "Speak now...")
-            putExtra(RecognizerIntent.EXTRA_MAX_RESULTS, 1)
+            putExtra(RecognizerIntent.EXTRA_LANGUAGE_MODEL, RecognizerIntent.LANGUAGE_MODEL_FREE_FORM) //natural language
+            putExtra(RecognizerIntent.EXTRA_LANGUAGE, Locale.getDefault()) //phone default language
+            putExtra(RecognizerIntent.EXTRA_PROMPT, "Speak now...") //tool tip
+            putExtra(RecognizerIntent.EXTRA_MAX_RESULTS, 1) //best result
         }
 
         try {
+            /**
+             * start listening
+             */
             speechRecognizer?.startListening(intent)
             _state.value = _state.value.copy(
                 isListening = true,
                 error = null,
                 recognizedText = ""
             )
-        } catch (e: Exception) {
+        } catch (e: Exception) { //if the recognizer fails to start then throw an error
             _state.value = _state.value.copy(
                 error = "Failed to start listening: ${e.message}",
                 isListening = false
@@ -80,16 +104,22 @@ class SpeechRecognitionManager(
         }
     }
 
+    //End the audio capture
     fun stopListening() {
         speechRecognizer?.stopListening()
         _state.value = _state.value.copy(isListening = false)
     }
 
+    //de-initialize the recognizer
     fun destroy() {
         speechRecognizer?.destroy()
         speechRecognizer = null
     }
 
+    /**
+     * Create a listener for the speech recognizer
+     *
+     */
     private fun createRecognitionListener(): RecognitionListener {
         return object : RecognitionListener {
             override fun onReadyForSpeech(params: Bundle?) {
@@ -112,6 +142,7 @@ class SpeechRecognitionManager(
                 _state.value = _state.value.copy(isListening = false)
             }
 
+            //Error handling
             override fun onError(error: Int) {
                 val errorMessage = when (error) {
                     SpeechRecognizer.ERROR_AUDIO -> "Audio recording error"

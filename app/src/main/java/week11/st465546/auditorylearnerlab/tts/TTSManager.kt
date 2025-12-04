@@ -11,7 +11,7 @@ import kotlin.coroutines.suspendCoroutine
 
 /*
        Name: Mariah Falzon
-       Date: Dec 3 2025
+       Updated: December 4 2025
 
        Description: manager to handle text-to-speech
 
@@ -49,6 +49,10 @@ class TTSManager(context: Context) {
         }
     }
 
+    /**
+     * Speak the given text using the specified utterance ID and queue mode.
+     *if the TTS isn't ready it won't run and will wait for it
+     */
     suspend fun speak(
         text: String,
         utteranceId: String = "default",
@@ -75,7 +79,7 @@ class TTSManager(context: Context) {
         tts?.stop()
     }
 
-    //shut down TTS
+    //shut down TTS and stop the resources
     fun shutdown() {
         tts?.stop()
         tts?.shutdown()
@@ -96,30 +100,30 @@ class TTSManager(context: Context) {
         }
     }
 
-    fun getSpeechFlow() = callbackFlow {
-        val listener = object : UtteranceProgressListener() {
-            override fun onStart(utteranceId: String?) {
-                trySend(TTSEvent.Started(utteranceId))
-            }
-
-            override fun onDone(utteranceId: String?) {
-                trySend(TTSEvent.Finished(utteranceId))
-            }
-
-            @Deprecated("Deprecated in Java")
-            override fun onError(utteranceId: String?) {
-                trySend(TTSEvent.Error(utteranceId))
-            }
-
-            override fun onError(utteranceId: String?, errorCode: Int) {
-                trySend(TTSEvent.Error(utteranceId))
-            }
-        }
-
-        tts?.setOnUtteranceProgressListener(listener)
-
-        awaitClose {
-            tts?.setOnUtteranceProgressListener(null)
-        }
-    }
+//    fun getSpeechFlow() = callbackFlow {
+//        val listener = object : UtteranceProgressListener() {
+//            override fun onStart(utteranceId: String?) {
+//                trySend(TTSEvent.Started(utteranceId))
+//            }
+//
+//            override fun onDone(utteranceId: String?) {
+//                trySend(TTSEvent.Finished(utteranceId))
+//            }
+//
+//            @Deprecated("Deprecated in Java")
+//            override fun onError(utteranceId: String?) {
+//                trySend(TTSEvent.Error(utteranceId))
+//            }
+//
+//            override fun onError(utteranceId: String?, errorCode: Int) {
+//                trySend(TTSEvent.Error(utteranceId))
+//            }
+//        }
+//
+//        tts?.setOnUtteranceProgressListener(listener)
+//
+//        awaitClose {
+//            tts?.setOnUtteranceProgressListener(null)
+//        }
+//    }
 }

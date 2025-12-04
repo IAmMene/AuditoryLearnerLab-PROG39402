@@ -18,12 +18,27 @@ import android.speech.tts.TextToSpeech
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
 import android.Manifest
+import androidx.compose.ui.text.font.FontWeight
+import week11.st465546.auditorylearnerlab.components.QuizProgressBar
+import week11.st465546.auditorylearnerlab.studyset.HomeViewModel
+import kotlin.math.roundToInt
 
 @Composable
 fun TakeQuizScreen(
     quiz: Quiz,
     onBack: () -> Unit
 ) {
+
+    // At the top of TakeQuizScreen, you need access to the ViewModel
+    val homeViewModel: HomeViewModel = androidx.lifecycle.viewmodel.compose.viewModel()
+
+    // Add these variables for progress tracking
+    var correctCount by remember { mutableStateOf(0) }
+    var answeredQuestions by remember { mutableStateOf(0) }
+    var quizCompleted by remember { mutableStateOf(false) }
+    var finalScore by remember { mutableStateOf<Float?>(null) }
+
+
     val context = LocalContext.current
     val ttsManager = remember { TTSManager(context) }
     val speechManager = remember { SpeechRecognitionManager(context) }
@@ -33,6 +48,7 @@ fun TakeQuizScreen(
     var isAnswerCorrect by remember { mutableStateOf<Boolean?>(null) }
     val speechState by speechManager.state.collectAsState()
     val coroutineScope = rememberCoroutineScope()
+
     //Permission launcher
     val permissionLauncher = rememberLauncherForActivityResult(
         contract = ActivityResultContracts.RequestPermission(),
@@ -52,14 +68,40 @@ fun TakeQuizScreen(
         userAnswer = ""
     }
 
-    //Define the check function to update the UI
+    //Define the check function to update the UI and add tracck progress
     fun checkAnswer(answerToCheck: String, question: Question) {
         val correctAnswer = question.options.getOrNull(question.correctIndex)
         // Check if the answer matches (ignoring case)
         val isCorrect = answerToCheck.trim().equals(correctAnswer, ignoreCase = true)
 
+        // Update the progress tracking
+        if (isCorrect) {
+            correctCount++
+        }
+        answeredQuestions++
+
         // Update the state -> This triggers the UI to show Green/Red box
         isAnswerCorrect = isCorrect
+    }
+    // Function to calculate and display final results
+    fun showResults() {
+        val totalQuestions = quiz.questions.size
+        finalScore = if (totalQuestions > 0) {
+            correctCount.toFloat() / totalQuestions.toFloat()
+        } else 0f
+        quizCompleted = true
+
+        // Save the score to Firestore
+        homeViewModel.saveQuizAttempt(quiz.id, correctCount, totalQuestions)
+
+        // Speak final results
+        coroutineScope.launch {
+            val scoreText = if (finalScore!! >= 0.7) "Excellent! "
+            else if (finalScore!! >= 0.5) "Good job! "
+            else "Keep practicing! "
+            val percentage = (finalScore!! * 100).roundToInt()
+            ttsManager.speak("Quiz completed! $scoreText You got $correctCount out of $totalQuestions questions correct. That's $percentage percent.")
+        }
     }
 
     val currentQuestion = quiz.questions.getOrNull(currentQuestionIndex)
@@ -88,6 +130,19 @@ fun TakeQuizScreen(
         }
     }
 
+    // If quiz is completed, show results screen
+    if (quizCompleted && finalScore != null) {
+        QuizResultsScreen(
+            quiz = quiz,
+            correctCount = correctCount,
+            totalQuestions = quiz.questions.size,
+            finalScore = finalScore!!,
+            onBack = onBack,
+            ttsManager = ttsManager
+        )
+        return
+    }
+
     Column(
         modifier = Modifier
             .fillMaxSize()
@@ -95,12 +150,75 @@ fun TakeQuizScreen(
             .verticalScroll(rememberScrollState()),
         horizontalAlignment = Alignment.CenterHorizontally
     ) {
-        // Quiz Title
-        Text(
-            text = quiz.title,
-            style = MaterialTheme.typography.headlineSmall,
-            modifier = Modifier.padding(bottom = 16.dp)
-        )
+        // Quiz Title with Progress Indicator
+        Card(
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(bottom = 16.dp),
+            colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surfaceVariant)
+        ) {
+            Column(
+                modifier = Modifier.padding(12.dp)
+            ) {
+                Row(
+                    modifier = Modifier.fillMaxWidth(),
+                    horizontalArrangement = Arrangement.SpaceBetween,
+                    verticalAlignment = Alignment.CenterVertically
+                ) {
+                    Text(
+                        text = quiz.title,
+                        style = MaterialTheme.typography.headlineSmall,
+                        fontWeight = FontWeight.Bold
+                    )
+
+                    // Current score badge
+                    if (answeredQuestions > 0) {
+                        val currentPercentage = if (quiz.questions.size > 0) {
+                            (correctCount.toFloat() / answeredQuestions.toFloat() * 100).roundToInt()
+                        } else 0
+
+                        Badge(
+                            containerColor = MaterialTheme.colorScheme.primaryContainer,
+                            contentColor = MaterialTheme.colorScheme.onPrimaryContainer
+                        ) {
+                            Text("$currentPercentage%")
+                        }
+                    }
+                }
+
+                Spacer(modifier = Modifier.height(8.dp))
+
+                // Progress tracker
+                Row(
+                    modifier = Modifier.fillMaxWidth(),
+                    verticalAlignment = Alignment.CenterVertically
+                ) {
+                    Text(
+                        text = "Question ${currentQuestionIndex + 1} of ${quiz.questions.size}",
+                        style = MaterialTheme.typography.bodyMedium,
+                        modifier = Modifier.weight(1f)
+                    )
+
+                    Text(
+                        text = "Score: $correctCount/${quiz.questions.size}",
+                        style = MaterialTheme.typography.bodyMedium,
+                        fontWeight = FontWeight.Medium
+                    )
+                }
+
+                Spacer(modifier = Modifier.height(8.dp))
+
+                // Progress bar for current quiz
+                QuizProgressBar(
+                    correctAnswers = correctCount,
+                    totalQuestions = quiz.questions.size,
+                    currentQuestion = currentQuestionIndex + 1,
+                    modifier = Modifier.fillMaxWidth(),
+                    showText = true,
+                    height = 24
+                )
+            }
+        }
 
         // Question Section
         Card(
@@ -112,8 +230,17 @@ fun TakeQuizScreen(
                 modifier = Modifier.padding(16.dp)
             ) {
                 Text(
-                    text = "Question ${currentQuestionIndex + 1} of ${quiz.questions.size}",
-                    style = MaterialTheme.typography.titleMedium
+                    text = "Question ${currentQuestionIndex + 1}",
+                    style = MaterialTheme.typography.titleMedium,
+                    color = MaterialTheme.colorScheme.primary
+                )
+
+                Spacer(modifier = Modifier.height(4.dp))
+
+                Text(
+                    text = "Choose the correct answer:",
+                    style = MaterialTheme.typography.bodySmall,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant
                 )
 
                 Spacer(modifier = Modifier.height(8.dp))
@@ -121,7 +248,8 @@ fun TakeQuizScreen(
                 currentQuestion?.let { question ->
                     Text(
                         text = question.text,
-                        style = MaterialTheme.typography.bodyLarge
+                        style = MaterialTheme.typography.bodyLarge,
+                        modifier = Modifier.padding(vertical = 8.dp)
                     )
 
                     Spacer(modifier = Modifier.height(16.dp))
@@ -136,10 +264,13 @@ fun TakeQuizScreen(
                                 coroutineScope.launch {
                                     ttsManager.speak("Question: ${question.text}")
                                 }
-                            }
+                            },
+                            modifier = Modifier.weight(1f)
                         ) {
                             Text("Read Question")
                         }
+
+                        Spacer(modifier = Modifier.width(8.dp))
 
                         Button(
                             onClick = {
@@ -155,7 +286,8 @@ fun TakeQuizScreen(
                                         )
                                     }
                                 }
-                            }
+                            },
+                            modifier = Modifier.weight(1f)
                         ) {
                             Text("Read Options")
                         }
@@ -173,11 +305,28 @@ fun TakeQuizScreen(
                             onClick = {
                                 userAnswer = option
                                 checkAnswer(option, question)
-                            }
+                            },
+                            colors = CardDefaults.cardColors(
+                                containerColor = if (userAnswer == option) {
+                                    when (isAnswerCorrect) {
+                                        true -> MaterialTheme.colorScheme.primaryContainer
+                                        false -> MaterialTheme.colorScheme.errorContainer
+                                        null -> MaterialTheme.colorScheme.surfaceVariant
+                                    }
+                                } else {
+                                    MaterialTheme.colorScheme.surface
+                                }
+                            )
                         ) {
                             Text(
                                 text = "${index + 1}. $option",
-                                modifier = Modifier.padding(12.dp)
+                                modifier = Modifier.padding(12.dp),
+                                color = if (userAnswer == option && isAnswerCorrect != null) {
+                                    if (isAnswerCorrect == true) MaterialTheme.colorScheme.onPrimaryContainer
+                                    else MaterialTheme.colorScheme.onErrorContainer
+                                } else {
+                                    MaterialTheme.colorScheme.onSurface
+                                }
                             )
                         }
                     }
@@ -246,26 +395,29 @@ fun TakeQuizScreen(
                     value = userAnswer,
                     onValueChange = { userAnswer = it },
                     label = { Text("Or type your answer") },
-                    modifier = Modifier.fillMaxWidth()
+                    modifier = Modifier.fillMaxWidth(),
+                    enabled = isAnswerCorrect == null // Disable if answer already submitted
                 )
 
                 Button(
                     onClick = {
                         currentQuestion?.let { question ->
-                            checkAnswer(userAnswer, question)
+                            if (isAnswerCorrect == null) { // Only submit if not already answered
+                                checkAnswer(userAnswer, question)
+                            }
                         }
                     },
                     modifier = Modifier
                         .fillMaxWidth()
                         .padding(top = 8.dp),
-                    enabled = userAnswer.isNotBlank()
+                    enabled = userAnswer.isNotBlank() && isAnswerCorrect == null
                 ) {
                     Text("Submit Answer")
                 }
             }
         }
 
-        // Feedback Section
+        // Feedback Section - Show only if answer has been submitted
         isAnswerCorrect?.let { correct ->
             Card(
                 modifier = Modifier
@@ -279,10 +431,22 @@ fun TakeQuizScreen(
                 Column(
                     modifier = Modifier.padding(16.dp)
                 ) {
-                    Text(
-                        text = if (correct) "Correct! ✓" else "Incorrect ✗",
-                        style = MaterialTheme.typography.titleMedium
-                    )
+                    Row(
+                        modifier = Modifier.fillMaxWidth(),
+                        horizontalArrangement = Arrangement.SpaceBetween,
+                        verticalAlignment = Alignment.CenterVertically
+                    ) {
+                        Text(
+                            text = if (correct) "Correct! ✓" else "Incorrect ✗",
+                            style = MaterialTheme.typography.titleMedium
+                        )
+
+                        // Mini progress for this question
+                        Text(
+                            text = "Score: $correctCount/${quiz.questions.size}",
+                            style = MaterialTheme.typography.bodyMedium
+                        )
+                    }
 
                     currentQuestion?.let { question ->
                         if (!correct) {
@@ -332,9 +496,11 @@ fun TakeQuizScreen(
                         currentQuestionIndex++
                         resetAnswerState()
                     } else {
-                        onBack()
+                        // Last question answered, show results
+                        showResults()
                     }
-                }
+                },
+                enabled = isAnswerCorrect != null // Only allow next if current question answered
             ) {
                 Text(
                     if (currentQuestionIndex < quiz.questions.size - 1) "Next Question"
