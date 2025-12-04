@@ -15,11 +15,20 @@ import week11.st465546.auditorylearnerlab.components.QuizProgressBar
 import week11.st465546.auditorylearnerlab.studyset.HomeViewModel
 import kotlin.math.roundToInt
 
+/**
+ * The core gameplay screen where users take the quiz.
+ *
+ * Integrated Features:
+ * 1. **Text-To-Speech (TTS):** Reads questions and feedback aloud via TTSManager.
+ * 2. **Speech-To-Text (STT):** Captures user voice answers via SpeechRecognitionManager.
+ * 3. **Permission Handling:** Manages RECORD_AUDIO permission at runtime.
+ */
 @Composable
 fun HomeScreen(
     onLogout: () -> Unit,
     onCreateQuiz: () -> Unit,
     onTakeQuiz: (String) -> Unit,
+    onEditQuiz: (String) -> Unit,
     viewModel: HomeViewModel
 ) {
     val quizzes by viewModel.quizzes.collectAsState()
@@ -55,7 +64,7 @@ fun HomeScreen(
                         .fillMaxWidth()
                         .padding(vertical = 6.dp)
                 ) {
-                    // Switched from Row to Column
+                    // Content Wrapper with Padding
                     Column(Modifier.padding(12.dp)) {
 
                         // Title and Question Count
@@ -87,6 +96,7 @@ fun HomeScreen(
 
                         Spacer(Modifier.height(8.dp))
 
+                        // Row for "Take Quiz" and "Edit" buttons
                         //Progress Bar Showing Overall Performance
                         // Progress bar showing overall performance
                         if (quiz.latestScore != null) {
@@ -121,6 +131,7 @@ fun HomeScreen(
                             horizontalArrangement = Arrangement.SpaceEvenly,
                             modifier = Modifier.fillMaxWidth()
                         ) {
+                            // Take Quiz Button
                             Button(
                                 onClick = { onTakeQuiz(quiz.id) },
                                 modifier = Modifier.weight(1f)
@@ -130,12 +141,21 @@ fun HomeScreen(
 
                             Spacer(Modifier.width(8.dp))
 
+                            // Edit Button
+                            Button(
+                                onClick = { onEditQuiz(quiz.id) },
+                                modifier = Modifier.weight(1f),
+                                colors = ButtonDefaults.buttonColors(
+                                    containerColor = MaterialTheme.colorScheme.secondary
+                                )
+                            ) {
+                                Text("Edit")
+                            }
                         }
 
                         Spacer(Modifier.height(8.dp))
 
-                        // The Big Red Delete Button
-                        // This replaces the "Icon" button in the previous version
+                        // Delete Button
                         Button(
                             onClick = { viewModel.deleteQuiz(quiz.id) },
                             colors = ButtonDefaults.buttonColors(containerColor = Color.Red),

@@ -150,6 +150,21 @@ fun TakeQuizScreen(
             .verticalScroll(rememberScrollState()),
         horizontalAlignment = Alignment.CenterHorizontally
     ) {
+        // Back Button aligned to the Start (Left)
+        Button(
+            onClick = onBack,
+            modifier = Modifier.align(Alignment.Start) // Forces it to the left
+        ) {
+            Text("Back to Home")
+        }
+
+        Spacer(modifier = Modifier.height(8.dp))
+        // Quiz Title
+        Text(
+            text = quiz.title,
+            style = MaterialTheme.typography.headlineSmall,
+            modifier = Modifier.padding(bottom = 16.dp)
+        )
         // Quiz Title with Progress Indicator
         Card(
             modifier = Modifier
@@ -534,12 +549,6 @@ fun TakeQuizScreen(
                     modifier = Modifier.fillMaxWidth()
                 )
             }
-        }
-
-        Spacer(modifier = Modifier.height(16.dp))
-
-        Button(onClick = onBack) {
-            Text("Back to Home")
         }
     }
 
