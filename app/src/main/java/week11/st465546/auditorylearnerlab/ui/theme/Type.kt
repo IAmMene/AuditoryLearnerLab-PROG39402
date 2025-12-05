@@ -1,3 +1,4 @@
+// Update your Typography.kt file
 package week11.st465546.auditorylearnerlab.ui.theme
 
 import androidx.compose.material3.Typography
@@ -17,18 +18,20 @@ val AppTypography = Typography(
         fontFamily = JetBrainsMono,
         fontWeight = FontWeight.Bold,
         fontSize = 28.sp,
-        color = White
+    ),  // Remove hardcoded color - will use theme colors
+    headlineMedium = TextStyle(
+        fontFamily = JetBrainsMono,
+        fontWeight = FontWeight.Bold,
+        fontSize = 24.sp,
     ),
     bodyMedium = TextStyle(
         fontFamily = JetBrainsMono,
         fontWeight = FontWeight.Normal,
         fontSize = 16.sp,
-        color = White
     ),
     labelLarge = TextStyle(
         fontFamily = JetBrainsMono,
         fontWeight = FontWeight.Medium,
         fontSize = 14.sp,
-        color = White
     )
 )

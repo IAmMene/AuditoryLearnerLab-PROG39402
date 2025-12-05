@@ -16,7 +16,7 @@ class MainActivity : ComponentActivity() {
         super.onCreate(savedInstanceState)
 
         setContent {
-            AuditoryLearnerLabTheme {
+            AuditoryLearnerLabTheme (false){
                 androidx.compose.material3.Surface(
                     color = MaterialTheme.colorScheme.background
                 ) {
