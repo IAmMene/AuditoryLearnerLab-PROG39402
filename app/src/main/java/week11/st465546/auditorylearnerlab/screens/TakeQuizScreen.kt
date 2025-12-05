@@ -522,7 +522,7 @@ fun TakeQuizScreen(
                                 verticalAlignment = Alignment.CenterVertically
                             ) {
                                 Text(
-                                    text = if (correct) "Correct! ✓" else "Incorrect ✗",
+                                    text = if (correct) "Correct! " else "Incorrect ",
                                     style = MaterialTheme.typography.titleMedium,
                                     fontWeight = FontWeight.Bold
                                 )
