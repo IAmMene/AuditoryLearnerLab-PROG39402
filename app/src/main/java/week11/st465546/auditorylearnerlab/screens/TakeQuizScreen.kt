@@ -21,6 +21,12 @@ import android.Manifest
 import androidx.compose.ui.text.font.FontWeight
 import week11.st465546.auditorylearnerlab.components.QuizProgressBar
 import week11.st465546.auditorylearnerlab.studyset.HomeViewModel
+import week11.st465546.auditorylearnerlab.ui.theme.DarkGreen
+import week11.st465546.auditorylearnerlab.ui.theme.GreenPrimary
+import week11.st465546.auditorylearnerlab.ui.theme.White
+import week11.st465546.auditorylearnerlab.ui.theme.GreyBlueSecondary
+import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.unit.sp
 import kotlin.math.roundToInt
 
 @Composable
@@ -38,7 +44,7 @@ fun TakeQuizScreen(
     var quizCompleted by remember { mutableStateOf(false) }
     var finalScore by remember { mutableStateOf<Float?>(null) }
 
-
+//Initialize the Speech and TTS Managers
     val context = LocalContext.current
     val ttsManager = remember { TTSManager(context) }
     val speechManager = remember { SpeechRecognitionManager(context) }
@@ -83,6 +89,7 @@ fun TakeQuizScreen(
         // Update the state -> This triggers the UI to show Green/Red box
         isAnswerCorrect = isCorrect
     }
+
     // Function to calculate and display final results
     fun showResults() {
         val totalQuestions = quiz.questions.size
@@ -142,421 +149,511 @@ fun TakeQuizScreen(
         )
         return
     }
-
-    Column(
-        modifier = Modifier
-            .fillMaxSize()
-            .padding(16.dp)
-            .verticalScroll(rememberScrollState()),
-        horizontalAlignment = Alignment.CenterHorizontally
+    Surface(
+        color = DarkGreen,
+        modifier = Modifier.fillMaxSize()
     ) {
-        // Back Button aligned to the Start (Left)
-        Button(
-            onClick = onBack,
-            modifier = Modifier.align(Alignment.Start) // Forces it to the left
-        ) {
-            Text("Back to Home")
-        }
-
-        Spacer(modifier = Modifier.height(8.dp))
-        // Quiz Title
-        Text(
-            text = quiz.title,
-            style = MaterialTheme.typography.headlineSmall,
-            modifier = Modifier.padding(bottom = 16.dp)
-        )
-        // Quiz Title with Progress Indicator
-        Card(
+        Column(
             modifier = Modifier
-                .fillMaxWidth()
-                .padding(bottom = 16.dp),
-            colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surfaceVariant)
+                .fillMaxSize()
+                .padding(16.dp)
+                .verticalScroll(rememberScrollState()),
+            horizontalAlignment = Alignment.CenterHorizontally
         ) {
-            Column(
-                modifier = Modifier.padding(12.dp)
+            Row(
+                modifier = Modifier.fillMaxWidth()
             ) {
-                Row(
-                    modifier = Modifier.fillMaxWidth(),
-                    horizontalArrangement = Arrangement.SpaceBetween,
-                    verticalAlignment = Alignment.CenterVertically
+                OutlinedButton(
+                    onClick = onBack,
+                    colors = ButtonDefaults.outlinedButtonColors(
+                        containerColor = Color.Transparent,
+                        contentColor = White
+                    )
                 ) {
-                    Text(
-                        text = quiz.title,
-                        style = MaterialTheme.typography.headlineSmall,
-                        fontWeight = FontWeight.Bold
-                    )
-
-                    // Current score badge
-                    if (answeredQuestions > 0) {
-                        val currentPercentage = if (quiz.questions.size > 0) {
-                            (correctCount.toFloat() / answeredQuestions.toFloat() * 100).roundToInt()
-                        } else 0
-
-                        Badge(
-                            containerColor = MaterialTheme.colorScheme.primaryContainer,
-                            contentColor = MaterialTheme.colorScheme.onPrimaryContainer
-                        ) {
-                            Text("$currentPercentage%")
-                        }
-                    }
-                }
-
-                Spacer(modifier = Modifier.height(8.dp))
-
-                // Progress tracker
-                Row(
-                    modifier = Modifier.fillMaxWidth(),
-                    verticalAlignment = Alignment.CenterVertically
-                ) {
-                    Text(
-                        text = "Question ${currentQuestionIndex + 1} of ${quiz.questions.size}",
-                        style = MaterialTheme.typography.bodyMedium,
-                        modifier = Modifier.weight(1f)
-                    )
-
-                    Text(
-                        text = "Score: $correctCount/${quiz.questions.size}",
-                        style = MaterialTheme.typography.bodyMedium,
-                        fontWeight = FontWeight.Medium
-                    )
-                }
-
-                Spacer(modifier = Modifier.height(8.dp))
-
-                // Progress bar for current quiz
-                QuizProgressBar(
-                    correctAnswers = correctCount,
-                    totalQuestions = quiz.questions.size,
-                    currentQuestion = currentQuestionIndex + 1,
-                    modifier = Modifier.fillMaxWidth(),
-                    showText = true,
-                    height = 24
-                )
-            }
-        }
-
-        // Question Section
-        Card(
-            modifier = Modifier
-                .fillMaxWidth()
-                .padding(vertical = 8.dp)
-        ) {
-            Column(
-                modifier = Modifier.padding(16.dp)
-            ) {
-                Text(
-                    text = "Question ${currentQuestionIndex + 1}",
-                    style = MaterialTheme.typography.titleMedium,
-                    color = MaterialTheme.colorScheme.primary
-                )
-
-                Spacer(modifier = Modifier.height(4.dp))
-
-                Text(
-                    text = "Choose the correct answer:",
-                    style = MaterialTheme.typography.bodySmall,
-                    color = MaterialTheme.colorScheme.onSurfaceVariant
-                )
-
-                Spacer(modifier = Modifier.height(8.dp))
-
-                currentQuestion?.let { question ->
-                    Text(
-                        text = question.text,
-                        style = MaterialTheme.typography.bodyLarge,
-                        modifier = Modifier.padding(vertical = 8.dp)
-                    )
-
-                    Spacer(modifier = Modifier.height(16.dp))
-
-                    // TTS Controls
-                    Row(
-                        horizontalArrangement = Arrangement.SpaceEvenly,
-                        modifier = Modifier.fillMaxWidth()
-                    ) {
-                        Button(
-                            onClick = {
-                                coroutineScope.launch {
-                                    ttsManager.speak("Question: ${question.text}")
-                                }
-                            },
-                            modifier = Modifier.weight(1f)
-                        ) {
-                            Text("Read Question")
-                        }
-
-                        Spacer(modifier = Modifier.width(8.dp))
-
-                        Button(
-                            onClick = {
-                                coroutineScope.launch {
-                                    // 1. Speak the intro phrase (Flushing any previous audio)
-                                    ttsManager.speak("Here are the options:", queueMode = TextToSpeech.QUEUE_FLUSH)
-
-                                    // 2. Loop through options and ADD them to the queue
-                                    question.options.forEachIndexed { index, option ->
-                                        ttsManager.speak(
-                                            text = "Option ${index + 1}: $option",
-                                            queueMode = TextToSpeech.QUEUE_ADD // Ensures they play sequentially
-                                        )
-                                    }
-                                }
-                            },
-                            modifier = Modifier.weight(1f)
-                        ) {
-                            Text("Read Options")
-                        }
-                    }
-
-                    // Options
-                    Spacer(modifier = Modifier.height(16.dp))
-                    Text("Options:", style = MaterialTheme.typography.titleSmall)
-
-                    question.options.forEachIndexed { index, option ->
-                        Card(
-                            modifier = Modifier
-                                .fillMaxWidth()
-                                .padding(vertical = 4.dp),
-                            onClick = {
-                                userAnswer = option
-                                checkAnswer(option, question)
-                            },
-                            colors = CardDefaults.cardColors(
-                                containerColor = if (userAnswer == option) {
-                                    when (isAnswerCorrect) {
-                                        true -> MaterialTheme.colorScheme.primaryContainer
-                                        false -> MaterialTheme.colorScheme.errorContainer
-                                        null -> MaterialTheme.colorScheme.surfaceVariant
-                                    }
-                                } else {
-                                    MaterialTheme.colorScheme.surface
-                                }
-                            )
-                        ) {
-                            Text(
-                                text = "${index + 1}. $option",
-                                modifier = Modifier.padding(12.dp),
-                                color = if (userAnswer == option && isAnswerCorrect != null) {
-                                    if (isAnswerCorrect == true) MaterialTheme.colorScheme.onPrimaryContainer
-                                    else MaterialTheme.colorScheme.onErrorContainer
-                                } else {
-                                    MaterialTheme.colorScheme.onSurface
-                                }
-                            )
-                        }
-                    }
+                    Text("← Back")
                 }
             }
-        }
+            Spacer(modifier = Modifier.height(10.dp))
 
-        // Speech Recognition Section
-        Card(
-            modifier = Modifier
-                .fillMaxWidth()
-                .padding(vertical = 8.dp)
-        ) {
-            Column(
-                modifier = Modifier.padding(16.dp)
-            ) {
-                Text(
-                    text = "Answer with Voice",
-                    style = MaterialTheme.typography.titleMedium
-                )
+            // Quiz Title - Centered
+            Text(
+                text = quiz.title,
+                style = MaterialTheme.typography.headlineLarge.copy(
+                    color = White,
+                    fontSize = 32.sp
+                ),
+                modifier = Modifier.padding(bottom = 16.dp),
+                textAlign = androidx.compose.ui.text.style.TextAlign.Center
+            )
 
-                Spacer(modifier = Modifier.height(8.dp))
-
-                // Speech recognition status
-                if (speechState.isListening) {
-                    Text(
-                        text = "Listening... Speak now",
-                        color = MaterialTheme.colorScheme.primary,
-                        modifier = Modifier.padding(bottom = 8.dp)
-                    )
-                }
-
-                // Voice Input Button
-                Button(
-                    onClick = {
-                        if (speechState.isListening) {
-                            speechManager.stopListening()
-                        } else {
-                            // Check if we need to ask for permission first
-                            if (speechManager.checkPermission()) {
-                                speechManager.startListening()
-                            } else {
-                                // ASK for permission
-                                permissionLauncher.launch(Manifest.permission.RECORD_AUDIO)
-                            }
-                        }
-                    },
-                    modifier = Modifier.fillMaxWidth()
-                ) {
-                    Text(if (speechState.isListening) "Stop Listening" else "Start Speaking")
-                }
-
-                // Show recognized text
-                if (speechState.recognizedText.isNotEmpty()) {
-                    Spacer(modifier = Modifier.height(8.dp))
-                    Text(
-                        text = "You said: ${speechState.recognizedText}",
-                        style = MaterialTheme.typography.bodyMedium,
-                        color = MaterialTheme.colorScheme.secondary
-                    )
-                }
-
-                // Text input fallback
-                Spacer(modifier = Modifier.height(16.dp))
-                OutlinedTextField(
-                    value = userAnswer,
-                    onValueChange = { userAnswer = it },
-                    label = { Text("Or type your answer") },
-                    modifier = Modifier.fillMaxWidth(),
-                    enabled = isAnswerCorrect == null // Disable if answer already submitted
-                )
-
-                Button(
-                    onClick = {
-                        currentQuestion?.let { question ->
-                            if (isAnswerCorrect == null) { // Only submit if not already answered
-                                checkAnswer(userAnswer, question)
-                            }
-                        }
-                    },
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .padding(top = 8.dp),
-                    enabled = userAnswer.isNotBlank() && isAnswerCorrect == null
-                ) {
-                    Text("Submit Answer")
-                }
-            }
-        }
-
-        // Feedback Section - Show only if answer has been submitted
-        isAnswerCorrect?.let { correct ->
+            // Quiz Title with Progress Indicator
             Card(
                 modifier = Modifier
                     .fillMaxWidth()
-                    .padding(vertical = 8.dp),
-                colors = CardDefaults.cardColors(
-                    containerColor = if (correct) MaterialTheme.colorScheme.primaryContainer
-                    else MaterialTheme.colorScheme.errorContainer
-                )
+                    .padding(bottom = 16.dp),
+                colors = CardDefaults.cardColors(containerColor = White)
             ) {
                 Column(
-                    modifier = Modifier.padding(16.dp)
+                    modifier = Modifier.padding(12.dp)
                 ) {
                     Row(
                         modifier = Modifier.fillMaxWidth(),
                         horizontalArrangement = Arrangement.SpaceBetween,
                         verticalAlignment = Alignment.CenterVertically
                     ) {
+                        // Question Counter
                         Text(
-                            text = if (correct) "Correct! ✓" else "Incorrect ✗",
-                            style = MaterialTheme.typography.titleMedium
+                            text = "Question ${currentQuestionIndex + 1}",
+                            style = MaterialTheme.typography.titleMedium.copy(
+                                color = DarkGreen
+                            )
                         )
-
-                        // Mini progress for this question
-                        Text(
-                            text = "Score: $correctCount/${quiz.questions.size}",
-                            style = MaterialTheme.typography.bodyMedium
-                        )
-                    }
-
-                    currentQuestion?.let { question ->
-                        if (!correct) {
-                            Spacer(modifier = Modifier.height(8.dp))
-                            Text("Correct answer: ${question.options[question.correctIndex]}")
+                        // Current score badge
+                        if (answeredQuestions > 0) {
+                            val currentPercentage = if (quiz.questions.size > 0) {
+                                (correctCount.toFloat() / answeredQuestions.toFloat() * 100).roundToInt()
+                            } else 0
+                            Badge(
+                                containerColor = MaterialTheme.colorScheme.primaryContainer,
+                                contentColor = MaterialTheme.colorScheme.onPrimaryContainer
+                            ) {
+                                Text("$currentPercentage%")
+                            }
                         }
                     }
+                    Spacer(modifier = Modifier.height(10.dp))
 
-                    Spacer(modifier = Modifier.height(8.dp))
-                    Button(
-                        onClick = {
-                            coroutineScope.launch {
-                                ttsManager.speak(
-                                    if (correct) "Correct! Well done."
-                                    else "Incorrect. The correct answer is ${currentQuestion?.options?.get(currentQuestion.correctIndex)}"
+                    // Score Display
+                    Text(
+                        text = "Score: $correctCount/${quiz.questions.size}",
+                        style = MaterialTheme.typography.bodyLarge.copy(
+                            color = DarkGreen,
+                            fontWeight = FontWeight.Medium
+                        )
+                    )
+
+                    Spacer(modifier = Modifier.height(12.dp))
+                    // Progress bar for current quiz
+                    QuizProgressBar(
+                        correctAnswers = correctCount,
+                        totalQuestions = quiz.questions.size,
+                        currentQuestion = currentQuestionIndex + 1,
+                        modifier = Modifier.fillMaxWidth(),
+                        showText = true,
+                        height = 24
+                    )
+                }
+            }
+            // Question Section
+            Card(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(bottom = 24.dp),
+                colors = CardDefaults.cardColors(
+                    containerColor = White
+                )
+            ) {
+                Column(
+                    modifier = Modifier.padding(16.dp)
+                ) {
+                    //Question Header
+                    Text(
+                        text = "Question ${currentQuestionIndex + 1}",
+                        style = MaterialTheme.typography.titleLarge.copy(
+                            color = GreenPrimary,
+                            fontWeight = FontWeight.Bold
+                        ),
+                        modifier = Modifier.padding(bottom = 4.dp)
+                    )
+                    currentQuestion?.let { question ->
+                        // Question Text
+                        Text(
+                            text = question.text,
+                            style = MaterialTheme.typography.bodyLarge.copy(
+                                color = DarkGreen,
+                                fontWeight = FontWeight.Medium
+                            ),
+                            modifier = Modifier.padding(vertical = 12.dp)
+                        )
+
+                        Spacer(modifier = Modifier.height(16.dp))
+
+                        //TTS Controls
+                        Row(
+                            horizontalArrangement = Arrangement.SpaceEvenly,
+                            modifier = Modifier.fillMaxWidth()
+                        ) {
+                            //Read Question
+                            OutlinedButton(
+                                onClick = {
+                                    coroutineScope.launch {
+                                        ttsManager.speak("Question: ${question.text}")
+                                    }
+                                },
+                                modifier = Modifier.weight(1f),
+                                colors = ButtonDefaults.outlinedButtonColors(
+                                    containerColor = Color.Transparent,
+                                    contentColor = GreenPrimary
+                                )
+                            ) {
+                                Text("Read Question")
+                            }
+
+                            Spacer(modifier = Modifier.width(8.dp))
+
+                            //Read Options
+                            // Read Options Button
+                            OutlinedButton(
+                                onClick = {
+                                    coroutineScope.launch {
+                                        // 1. Speak the intro phrase (Flushing any previous audio)
+                                        ttsManager.speak(
+                                            "Here are the options:",
+                                            queueMode = TextToSpeech.QUEUE_FLUSH
+                                        )
+                                        // 2. Loop through options and ADD them to the queue
+                                        question.options.forEachIndexed { index, option ->
+                                            ttsManager.speak(
+                                                text = "Option ${index + 1}: $option",
+                                                queueMode = TextToSpeech.QUEUE_ADD
+                                            )
+                                        }
+                                    }
+                                },
+                                modifier = Modifier.weight(1f),
+                                colors = ButtonDefaults.outlinedButtonColors(
+                                    containerColor = Color.Transparent,
+                                    contentColor = GreenPrimary
+                                )
+                            ) {
+                                Text("Read Options")
+                            }
+                        }
+                        Spacer(modifier = Modifier.height(20.dp))
+                        //Read Options
+                        Text(
+                            text = "Choose the correct answer:",
+                            style = MaterialTheme.typography.titleSmall.copy(
+                                color = GreyBlueSecondary
+                            ),
+                            modifier = Modifier.padding(bottom = 12.dp)
+                        )
+                        //Options List
+                        question.options.forEachIndexed { index, option ->
+                            Card(
+                                modifier = Modifier
+                                    .fillMaxWidth()
+                                    .padding(vertical = 6.dp),
+                                onClick = {
+                                    userAnswer = option
+                                    checkAnswer(option, question)
+                                },
+                                colors = CardDefaults.cardColors(
+                                    containerColor = if (userAnswer == option) {
+                                        when (isAnswerCorrect) {
+                                            true -> GreenPrimary.copy(alpha = 0.2f)
+                                            false -> Color.Red.copy(alpha = 0.2f)
+                                            null -> GreyBlueSecondary.copy(alpha = 0.1f)
+                                        }
+                                    } else {
+                                        Color.Transparent
+                                    }
+                                ),
+                                elevation = CardDefaults.cardElevation(
+                                    defaultElevation = if (userAnswer == option) 2.dp else 0.dp
+                                )
+                            ) {
+                                Text(
+                                    text = "${index + 1}. $option",
+                                    modifier = Modifier.padding(12.dp),
+                                    color = if (userAnswer == option && isAnswerCorrect != null) {
+                                        if (isAnswerCorrect == true) MaterialTheme.colorScheme.onPrimaryContainer
+                                        else MaterialTheme.colorScheme.onErrorContainer
+                                    } else {
+                                        MaterialTheme.colorScheme.onSurface
+                                    }
                                 )
                             }
-                        },
-                        modifier = Modifier.fillMaxWidth()
-                    ) {
-                        Text("Hear Feedback")
+                        }
                     }
                 }
             }
-        }
-
-        // Navigation Buttons
-        Row(
-            horizontalArrangement = Arrangement.SpaceBetween,
-            modifier = Modifier.fillMaxWidth()
-        ) {
-            Button(
-                onClick = {
-                    if (currentQuestionIndex > 0) {
-                        currentQuestionIndex--
-                        resetAnswerState()
-                    }
-                },
-                enabled = currentQuestionIndex > 0
-            ) {
-                Text("Previous")
-            }
-
-            Button(
-                onClick = {
-                    if (currentQuestionIndex < quiz.questions.size - 1) {
-                        currentQuestionIndex++
-                        resetAnswerState()
-                    } else {
-                        // Last question answered, show results
-                        showResults()
-                    }
-                },
-                enabled = isAnswerCorrect != null // Only allow next if current question answered
-            ) {
-                Text(
-                    if (currentQuestionIndex < quiz.questions.size - 1) "Next Question"
-                    else "Finish Quiz"
+            //Answer Submission Card and Speech Recognition Section
+            Card(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(bottom = 24.dp),
+                colors = CardDefaults.cardColors(
+                    containerColor = White
                 )
-            }
-        }
-
-        Spacer(modifier = Modifier.height(16.dp))
-
-        // Settings
-        Card(
-            modifier = Modifier.fillMaxWidth()
-        ) {
-            Column(
-                modifier = Modifier.padding(16.dp)
             ) {
-                Text("TTS Settings", style = MaterialTheme.typography.titleSmall)
-                Spacer(modifier = Modifier.height(8.dp))
+                Column(
+                    modifier = Modifier.padding(16.dp)
+                ) {
+                    Text(
+                        text = "Submit Your Answer",
+                        style = MaterialTheme.typography.titleLarge.copy(
+                            color = DarkGreen
+                        ),
+                        modifier = Modifier.padding(bottom = 16.dp)
+                    )
+                    //VOice Input
+                    Column(
+                        modifier = Modifier.padding(bottom = 16.dp)
+                    ) {
+                        Text(
+                            text = "Answer with Voice",
+                            style = MaterialTheme.typography.titleSmall.copy(
+                                color = GreyBlueSecondary
+                            ),
+                            modifier = Modifier.padding(bottom = 8.dp)
+                        )
+                        // Speech recognition status
+                        if (speechState.isListening) {
+                            Text(
+                                text = "Listening... Speak now",
+                                color = GreenPrimary,
+                                modifier = Modifier.padding(bottom = 8.dp)
+                            )
+                        }
+                        // Voice Input Button
+                        Button(
+                            onClick = {
+                                if (speechState.isListening) {
+                                    speechManager.stopListening()
+                                } else {
+                                    // Check if we need to ask for permission first
+                                    if (speechManager.checkPermission()) {
+                                        speechManager.startListening()
+                                    } else {
+                                        // ASK for permission
+                                        permissionLauncher.launch(Manifest.permission.RECORD_AUDIO)
+                                    }
+                                }
+                            },
+                            modifier = Modifier.fillMaxWidth(),
+                            colors = ButtonDefaults.buttonColors(
+                                containerColor = if (speechState.isListening)
+                                    GreenPrimary.copy(alpha = 0.8f)
+                                else
+                                    GreenPrimary,
+                                contentColor = White
+                            )
+                        ) {
+                            Text(if (speechState.isListening) "Stop Listening" else "Start Speaking")
+                        }
 
-                var speechRate by remember { mutableStateOf(0.9f) }
-                Text("Speech Speed: ${"%.1f".format(speechRate)}x")
-                Slider(
-                    value = speechRate,
-                    onValueChange = {
-                        speechRate = it
-                        ttsManager.setSpeechRate(it)
-                    },
-                    valueRange = 0.5f..2.0f,
-                    steps = 14,
+                        //Show Recognition Text
+                        if (speechState.recognizedText.isNotEmpty()) {
+                            Spacer(modifier = Modifier.height(8.dp))
+                            Card(
+                                modifier = Modifier.fillMaxWidth(),
+                                colors = CardDefaults.cardColors(
+                                    containerColor = GreyBlueSecondary.copy(alpha = 0.1f)
+                                )
+                            ) {
+                                Text(
+                                    text = "You said: ${speechState.recognizedText}",
+                                    style = MaterialTheme.typography.bodyMedium,
+                                    color = DarkGreen,
+                                    modifier = Modifier.padding(12.dp)
+                                )
+                            }
+                        }
+                    }
+                    // Text input fallback
+                    // Text Input Section
+                    Column {
+                        Text(
+                            text = "Or type your answer:",
+                            style = MaterialTheme.typography.titleSmall.copy(
+                                color = GreyBlueSecondary
+                            ),
+                            modifier = Modifier.padding(bottom = 8.dp)
+                        )
+
+                        OutlinedTextField(
+                            value = userAnswer,
+                            onValueChange = { userAnswer = it },
+                            label = {
+                                Text(
+                                    "Or type your answer",
+                                    color = GreyBlueSecondary
+                                )
+                            },
+                            modifier = Modifier.fillMaxWidth(),
+                            enabled = isAnswerCorrect == null // Disable if answer already submitted
+                        )
+                        Button(
+                            onClick = {
+                                currentQuestion?.let { question ->
+                                    if (isAnswerCorrect == null) { // Only submit if not already answered
+                                        checkAnswer(userAnswer, question)
+                                    }
+                                }
+                            },
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .padding(top = 8.dp),
+                            enabled = userAnswer.isNotBlank() && isAnswerCorrect == null
+                        ) {
+                            Text("Submit Answer")
+                        }
+                    }
+                }
+
+                //Feed Back Section
+                isAnswerCorrect?.let { correct ->
+                    Card(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .padding(bottom = 12.dp),
+                        colors = CardDefaults.cardColors(
+                            containerColor = if (correct) GreenPrimary.copy(alpha = 0.1f)
+                            else Color.Red.copy(0.1f)
+                        )
+                    ) {
+                        Column(
+                            modifier = Modifier.padding(16.dp)
+                        ) {
+                            Row(
+                                modifier = Modifier.fillMaxWidth(),
+                                horizontalArrangement = Arrangement.SpaceBetween,
+                                verticalAlignment = Alignment.CenterVertically
+                            ) {
+                                Text(
+                                    text = if (correct) "Correct! ✓" else "Incorrect ✗",
+                                    style = MaterialTheme.typography.titleMedium,
+                                    fontWeight = FontWeight.Bold
+                                )
+
+                                // Mini progress for this question
+                                Text(
+                                    text = "Score: $correctCount/${quiz.questions.size}",
+                                    style = MaterialTheme.typography.bodyMedium
+                                )
+                            }
+
+                            currentQuestion?.let { question ->
+                                if (!correct) {
+                                    Spacer(modifier = Modifier.height(8.dp))
+                                    Text("Correct answer: ${question.options[question.correctIndex]}")
+                                }
+                            }
+
+                            Spacer(modifier = Modifier.height(8.dp))
+                            Button(
+                                onClick = {
+                                    coroutineScope.launch {
+                                        ttsManager.speak(
+                                            if (correct) "Correct! Well done."
+                                            else "Incorrect. The correct answer is ${
+                                                currentQuestion?.options?.get(
+                                                    currentQuestion.correctIndex
+                                                )
+                                            }"
+                                        )
+                                    }
+                                },
+                                modifier = Modifier.fillMaxWidth()
+                            ) {
+                                Text("Hear Feedback")
+                            }
+                        }
+                    }
+                }
+
+                // Navigation Buttons
+                Row(
+                    horizontalArrangement = Arrangement.SpaceBetween,
                     modifier = Modifier.fillMaxWidth()
-                )
-            }
-        }
-    }
+                ) {
+                    OutlinedButton(
+                        onClick = {
+                            if (currentQuestionIndex > 0) {
+                                currentQuestionIndex--
+                                resetAnswerState()
+                            }
+                        },
+                        enabled = currentQuestionIndex > 0,
+                        colors = ButtonDefaults.outlinedButtonColors(
+                            containerColor = Color.Transparent,
+                            contentColor = White
+                        )
+                    ) {
+                        Text("Previous")
+                    }
+                    //Next Question
+                    Button(
+                        onClick = {
+                            if (currentQuestionIndex < quiz.questions.size - 1) {
+                                currentQuestionIndex++
+                                resetAnswerState()
+                            } else {
+                                // Last question answered, show results
+                                showResults()
+                            }
+                        },
+                        enabled = isAnswerCorrect != null, // Only allow next if current question answered
+                        colors = ButtonDefaults.buttonColors(
+                            containerColor = White,
+                            contentColor = GreenPrimary
+                        )
+                    ) {
+                        Text(
+                            if (currentQuestionIndex < quiz.questions.size - 1) "Next Question"
+                            else "Finish Quiz"
+                        )
+                    }
+                }
+                Spacer(modifier = Modifier.height(16.dp))
 
-    // Cleanup on dispose
-    DisposableEffect(Unit) {
-        onDispose {
-            ttsManager.shutdown()
-            speechManager.destroy()
+                // TTS Settings
+                Card(
+                    modifier = Modifier.fillMaxWidth(),
+                    colors = CardDefaults.cardColors(
+                        containerColor = White
+                    )
+                ) {
+                    Column(
+                        modifier = Modifier.padding(16.dp)
+                    ) {
+                        Text("TTS Settings", style = MaterialTheme.typography.titleSmall.copy(color = DarkGreen),
+                            modifier = Modifier.padding(bottom = 8.dp))
+
+                        Spacer(modifier = Modifier.height(8.dp))
+
+                        var speechRate by remember { mutableStateOf(0.9f) }
+                        Text("Speech Speed: ${"%.1f".format(speechRate)}x")
+                        Slider(
+                            value = speechRate,
+                            onValueChange = {
+                                speechRate = it
+                                ttsManager.setSpeechRate(it)
+                            },
+                            valueRange = 0.5f..2.0f,
+                            steps = 14,
+                            modifier = Modifier.fillMaxWidth(),
+                            colors = SliderDefaults.colors(
+                                thumbColor = GreenPrimary,
+                                activeTrackColor = GreenPrimary,
+                                inactiveTrackColor = GreyBlueSecondary.copy(alpha = 0.3f)
+                            )
+                        )
+                    }
+                }
+            }
+
+            // Cleanup on dispose
+            DisposableEffect(Unit) {
+                onDispose {
+                    ttsManager.shutdown()
+                    speechManager.destroy()
+                }
+
+            }
         }
     }
 }
+
+
