@@ -14,6 +14,7 @@ import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
+import week11.st465546.auditorylearnerlab.ui.theme.GreyBlueSecondary
 
 
 @Composable
@@ -47,15 +48,20 @@ fun DetailedQuizProgressBar(
                 Text(
                     text = "Latest: ${(score * 100).toInt()}%",
                     style = MaterialTheme.typography.labelSmall,
-                    color = MaterialTheme.colorScheme.onSurfaceVariant
+                    color = GreyBlueSecondary
                 )
+            } ?: run {
+                //if no latest score show empty text
+                Text(
+                    text = "",
+                    style = MaterialTheme.typography.labelSmall)
             }
             // Best score
             bestScore?.let { score ->
                 Text(
                     text = "Best: ${(score * 100).toInt()}%",
                     style = MaterialTheme.typography.labelSmall,
-                    color = MaterialTheme.colorScheme.onSurfaceVariant
+                    color = GreyBlueSecondary
                 )
             }
         }

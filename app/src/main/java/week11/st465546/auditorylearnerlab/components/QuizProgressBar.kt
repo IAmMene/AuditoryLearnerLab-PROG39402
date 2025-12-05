@@ -18,8 +18,12 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
+import week11.st465546.auditorylearnerlab.ui.theme.GreenPrimary
+import week11.st465546.auditorylearnerlab.ui.theme.GreyBlueSecondary
+import week11.st465546.auditorylearnerlab.ui.theme.White
 
 @Composable
 fun QuizProgressBar(
@@ -28,7 +32,13 @@ fun QuizProgressBar(
     currentQuestion: Int? = null, // Add this parameter
     modifier: Modifier = Modifier,
     showText: Boolean = true,
-    height: Int = 24
+    height: Int = 24,
+    // Add parameters for custom colors
+    backgroundColor: Color = GreyBlueSecondary.copy(alpha = 0.3f),
+    progressColor: Color = GreenPrimary,
+    incompleteColor: Color = Color.LightGray.copy(alpha = 0.3f),
+    currentQuestionColor: Color = White.copy(alpha = 0.5f),
+    textColor: Color = White
 ) {
     if (totalQuestions == 0) return
 
@@ -46,7 +56,7 @@ fun QuizProgressBar(
             .fillMaxWidth()
             .height(height.dp)
             .clip(RoundedCornerShape(12.dp))
-            .background(MaterialTheme.colorScheme.surfaceVariant),
+            .background(backgroundColor),
         contentAlignment = Alignment.CenterStart
     ) {
         // Correct answers (green)
@@ -55,7 +65,7 @@ fun QuizProgressBar(
                 .fillMaxHeight()
                 .fillMaxWidth(progress)
                 .clip(RoundedCornerShape(12.dp))
-                .background(MaterialTheme.colorScheme.primary)
+                .background(progressColor)
         )
 
         // Incorrect answers (gray for unanswered/unattempted)
@@ -65,10 +75,7 @@ fun QuizProgressBar(
                     .fillMaxHeight()
                     .fillMaxWidth(1f - progress)
                     .clip(RoundedCornerShape(12.dp))
-                    .background(
-                        if (currentQuestion == null) MaterialTheme.colorScheme.error
-                        else MaterialTheme.colorScheme.outline.copy(alpha = 0.3f)
-                    )
+                    .background(incompleteColor)
                     .align(Alignment.CenterEnd)
             )
         }
@@ -80,9 +87,7 @@ fun QuizProgressBar(
                         .fillMaxHeight()
                         .width(4.dp)
                         .fillMaxWidth(cp)
-                        .background(
-                            MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.5f)
-                        )
+                        .background(currentQuestionColor)
                 )
             }
         }
@@ -91,7 +96,7 @@ fun QuizProgressBar(
                 text = if (currentQuestion != null)
                     "Q$currentQuestion/$totalQuestions | Score: $correctAnswers/$totalQuestions"
                 else "$correctAnswers/$totalQuestions",
-                color = MaterialTheme.colorScheme.onSurface,
+                color = textColor,
                 style = MaterialTheme.typography.labelMedium,
                 modifier = Modifier.fillMaxWidth(),
                 textAlign = TextAlign.Center

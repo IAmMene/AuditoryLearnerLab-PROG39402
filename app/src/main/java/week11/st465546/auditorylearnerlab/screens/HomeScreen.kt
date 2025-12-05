@@ -10,19 +10,16 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.sp
 import week11.st465546.auditorylearnerlab.components.DetailedQuizProgressBar
 import week11.st465546.auditorylearnerlab.components.QuizProgressBar
 import week11.st465546.auditorylearnerlab.studyset.HomeViewModel
+import week11.st465546.auditorylearnerlab.ui.theme.DarkGreen
+import week11.st465546.auditorylearnerlab.ui.theme.GreenPrimary
+import week11.st465546.auditorylearnerlab.ui.theme.GreyBlueSecondary
+import week11.st465546.auditorylearnerlab.ui.theme.White
 import kotlin.math.roundToInt
 
-/**
- * The core gameplay screen where users take the quiz.
- *
- * Integrated Features:
- * 1. **Text-To-Speech (TTS):** Reads questions and feedback aloud via TTSManager.
- * 2. **Speech-To-Text (STT):** Captures user voice answers via SpeechRecognitionManager.
- * 3. **Permission Handling:** Manages RECORD_AUDIO permission at runtime.
- */
 @Composable
 fun HomeScreen(
     onLogout: () -> Unit,
@@ -33,145 +30,249 @@ fun HomeScreen(
 ) {
     val quizzes by viewModel.quizzes.collectAsState()
 
-    Column(Modifier.padding(16.dp)) {
-
-        Button(
-            onClick = onCreateQuiz,
-            modifier = Modifier.fillMaxWidth()
+    // Use Surface to set the dark green background
+    Surface(
+        color = DarkGreen,
+        modifier = Modifier.fillMaxSize()
+    ) {
+        Column(
+            modifier = Modifier
+                .padding(24.dp)
+                .fillMaxSize(),
+            horizontalAlignment = Alignment.CenterHorizontally
         ) {
-            Text("Create Study Set")
-        }
-
-        Spacer(Modifier.height(16.dp))
-
-        Text("Your Study Sets", style = MaterialTheme.typography.headlineSmall)
-
-        if (quizzes.isEmpty()) {
-            Spacer(modifier = Modifier.height(32.dp))
+            // Welcome Title in White
             Text(
-                text = "No quizzes yet. Create your first study set!",
-                style = MaterialTheme.typography.bodyMedium,
-                color = MaterialTheme.colorScheme.onSurfaceVariant,
-                modifier = Modifier.fillMaxWidth(),
+                "Welcome Back",
+                style = MaterialTheme.typography.headlineLarge.copy(
+                    color = White,
+                    fontSize = 32.sp // Slightly larger
+                ),
+                modifier = Modifier.padding(bottom = 16.dp)
+            )
+
+            // Create Study Set Button - White with GreenPrimary text
+            OutlinedButton(
+                onClick = onCreateQuiz,
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(bottom = 32.dp),
+                colors = ButtonDefaults.outlinedButtonColors(
+                    containerColor = White,
+                    contentColor = GreenPrimary
+                ),
+                border = ButtonDefaults.outlinedButtonBorder.copy(
+                    width = 2.dp
+                )
+            ) {
+                Text(
+                    "Create Study Set",
+                    style = MaterialTheme.typography.titleMedium.copy(
+                        fontWeight = FontWeight.Medium
+                    )
+                )
+            }
+
+            // Your Study Sets Section
+            Text(
+                "Your Study Sets",
+                style = MaterialTheme.typography.headlineMedium.copy(
+                    color = White
+                ),
+                modifier = Modifier.padding(bottom = 16.dp)
+                    .fillMaxWidth(),
                 textAlign = androidx.compose.ui.text.style.TextAlign.Center
             )
-        }
 
-        LazyColumn {
-            items(quizzes) { quiz ->
+            if (quizzes.isEmpty()) {
                 Card(
-                    Modifier
+                    modifier = Modifier
                         .fillMaxWidth()
-                        .padding(vertical = 6.dp)
+                        .padding(vertical = 8.dp),
+                    colors = CardDefaults.cardColors(
+                        containerColor = Color.White.copy(alpha = 0.1f)
+                    )
                 ) {
-                    // Content Wrapper with Padding
-                    Column(Modifier.padding(12.dp)) {
+                    Column(
+                        modifier = Modifier
+                            .padding(24.dp)
+                            .fillMaxWidth(),
+                        horizontalAlignment = Alignment.CenterHorizontally
+                    ) {
+                        Text(
+                            text = "No study sets yet.",
+                            style = MaterialTheme.typography.bodyLarge.copy(
+                                color = White
+                            ),
+                            modifier = Modifier.padding(bottom = 8.dp)
+                        )
+                        Text(
+                            text = "Create your first study set to get started!",
+                            style = MaterialTheme.typography.bodyMedium.copy(
+                                color = White.copy(alpha = 0.8f)
+                            ),
+                            textAlign = androidx.compose.ui.text.style.TextAlign.Center
+                        )
+                    }
+                }
+            }
 
-                        // Title and Question Count
-                        Row(
-                            modifier = Modifier.fillMaxWidth(),
-                            horizontalArrangement = Arrangement.SpaceBetween,
-                            verticalAlignment = Alignment.CenterVertically
-                        ){
-                            Text(quiz.title, fontWeight = FontWeight.Bold)
-                            Text(
-                                "${quiz.questions.size} questions",
-                                style = MaterialTheme.typography.bodySmall,
-                                color = MaterialTheme.colorScheme.onSurfaceVariant
-                            )
-                            //Score Badge
-                            quiz.latestScore?.let { score ->
-                                Badge(
-                                    containerColor = if (score >= 0.7) MaterialTheme.colorScheme.primaryContainer
-                                    else if (score >= 0.5) MaterialTheme.colorScheme.secondaryContainer
-                                    else MaterialTheme.colorScheme.errorContainer,
-                                    contentColor = if (score >= 0.7) MaterialTheme.colorScheme.primary
-                                    else if (score >= 0.5) MaterialTheme.colorScheme.secondary
-                                    else MaterialTheme.colorScheme.error
-                                ) {
-                                    Text("${(score * 100).roundToInt()}%")
+            LazyColumn(
+                modifier = Modifier.weight(1f),
+                verticalArrangement = Arrangement.spacedBy(16.dp)
+            ) {
+                items(quizzes) { quiz ->
+                    // Quiz Card
+                    Card(
+                        modifier = Modifier.fillMaxWidth(),
+                        colors = CardDefaults.cardColors(
+                            containerColor = White
+                        ),
+                        elevation = CardDefaults.cardElevation(
+                            defaultElevation = 4.dp
+                        )
+                    ) {
+                        Column(
+                            modifier = Modifier.padding(16.dp)
+                        ) {
+                            // Title and Stats Row
+                            Row(
+                                modifier = Modifier.fillMaxWidth(),
+                                horizontalArrangement = Arrangement.SpaceBetween,
+                                verticalAlignment = Alignment.CenterVertically
+                            ) {
+                                Text(
+                                    quiz.title,
+                                    style = MaterialTheme.typography.titleLarge.copy(
+                                        color = DarkGreen,
+                                        fontWeight = FontWeight.Bold
+                                    ),
+                                    modifier = Modifier.weight(1f)
+                                )
+
+                                // Question Count
+                                Text(
+                                    "${quiz.questions.size} questions",
+                                    style = MaterialTheme.typography.bodySmall.copy(
+                                        color = GreyBlueSecondary
+                                    )
+                                )
+
+                                // Score Badge
+                                quiz.latestScore?.let { score ->
+                                    Badge(
+                                        containerColor = when {
+                                            score >= 0.7 -> Color(0xFF4CAF50) // Green
+                                            score >= 0.5 -> Color(0xFFFF9800) // Orange
+                                            else -> Color(0xFFF44336) // Red
+                                        },
+                                        contentColor = White
+                                    ) {
+                                        Text("${(score * 100).roundToInt()}%")
+                                    }
                                 }
                             }
-                        }
-
-                        Spacer(Modifier.height(8.dp))
-
-                        // Row for "Take Quiz" and "Edit" buttons
-                        //Progress Bar Showing Overall Performance
-                        // Progress bar showing overall performance
-                        if (quiz.latestScore != null) {
-                            // Calculate correct answers from latest score
-                            val totalQuestions = quiz.questions.size
-                            val correctAnswers = (quiz.latestScore!! * totalQuestions).toInt()
-
-                            DetailedQuizProgressBar(
-                                correctAnswers = correctAnswers,
-                                totalQuestions = totalQuestions,
-                                bestScore = quiz.bestScore,
-                                latestScore = quiz.latestScore,
-                                modifier = Modifier.fillMaxWidth()
-                            )
 
                             Spacer(Modifier.height(12.dp))
-                        } else {
-                            // No score yet - show empty progress bar
-                            QuizProgressBar(
-                                correctAnswers = 0,
-                                totalQuestions = quiz.questions.size,
-                                modifier = Modifier.fillMaxWidth(),
-                                showText = true
-                            )
 
-                            Spacer(Modifier.height(12.dp))
-                        }
+                            // Progress Bar
+                            if (quiz.latestScore != null) {
+                                val totalQuestions = quiz.questions.size
+                                val correctAnswers = (quiz.latestScore!! * totalQuestions).toInt()
 
-
-                        // The Take Quiz Button is in its own Row
-                        Row(
-                            horizontalArrangement = Arrangement.SpaceEvenly,
-                            modifier = Modifier.fillMaxWidth()
-                        ) {
-                            // Take Quiz Button
-                            Button(
-                                onClick = { onTakeQuiz(quiz.id) },
-                                modifier = Modifier.weight(1f)
-                            ) {
-                                Text("Take Quiz")
-                            }
-
-                            Spacer(Modifier.width(8.dp))
-
-                            // Edit Button
-                            Button(
-                                onClick = { onEditQuiz(quiz.id) },
-                                modifier = Modifier.weight(1f),
-                                colors = ButtonDefaults.buttonColors(
-                                    containerColor = MaterialTheme.colorScheme.secondary
+                                DetailedQuizProgressBar(
+                                    correctAnswers = correctAnswers,
+                                    totalQuestions = totalQuestions,
+                                    bestScore = quiz.bestScore,
+                                    latestScore = quiz.latestScore,
+                                    modifier = Modifier.fillMaxWidth()
                                 )
-                            ) {
-                                Text("Edit")
+                            } else {
+                                // No score yet
+                                QuizProgressBar(
+                                    correctAnswers = 0,
+                                    totalQuestions = quiz.questions.size,
+                                    modifier = Modifier.fillMaxWidth(),
+                                    showText = true
+                                )
                             }
-                        }
 
-                        Spacer(Modifier.height(8.dp))
+                            Spacer(Modifier.height(16.dp))
 
-                        // Delete Button
-                        Button(
-                            onClick = { viewModel.deleteQuiz(quiz.id) },
-                            colors = ButtonDefaults.buttonColors(containerColor = Color.Red),
-                            modifier = Modifier.fillMaxWidth()
-                        ) {
-                            Text("Delete")
+                            // Action Buttons Row - Edit, Delete, Take Quiz
+                            Row(
+                                modifier = Modifier.fillMaxWidth(),
+                                horizontalArrangement = Arrangement.SpaceBetween
+                            ) {
+                                // Edit Button
+                                OutlinedButton(
+                                    onClick = { onEditQuiz(quiz.id) },
+                                    modifier = Modifier.weight(1f),
+                                    colors = ButtonDefaults.outlinedButtonColors(
+                                        containerColor = Color.Transparent,
+                                        contentColor = GreenPrimary
+                                    ),
+                                    border = ButtonDefaults.outlinedButtonBorder.copy(
+                                        width = 1.dp
+                                    )
+                                ) {
+                                    Text("Edit")
+                                }
+
+                                Spacer(Modifier.width(8.dp))
+
+                                // Delete Button
+                                OutlinedButton(
+                                    onClick = { viewModel.deleteQuiz(quiz.id) },
+                                    modifier = Modifier.weight(1f),
+                                    colors = ButtonDefaults.outlinedButtonColors(
+                                        containerColor = Color.Transparent,
+                                        contentColor = Color.Red
+                                    ),
+                                    border = ButtonDefaults.outlinedButtonBorder.copy(
+                                        width = 1.dp
+                                    )
+                                ) {
+                                    Text("Delete")
+                                }
+
+                                Spacer(Modifier.width(8.dp))
+
+                                // Take Quiz Button
+                                Button(
+                                    onClick = { onTakeQuiz(quiz.id) },
+                                    modifier = Modifier.weight(1f),
+                                    colors = ButtonDefaults.buttonColors(
+                                        containerColor = GreenPrimary,
+                                        contentColor = White
+                                    )
+                                ) {
+                                    Text("Take")
+                                }
+                            }
                         }
                     }
                 }
             }
-        }
 
-        Spacer(Modifier.height(16.dp))
+            Spacer(Modifier.height(16.dp))
 
-        Button(onClick = onLogout) {
-            Text("Logout")
+            // Logout Button
+            OutlinedButton(
+                onClick = onLogout,
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(top = 8.dp),
+                colors = ButtonDefaults.outlinedButtonColors(
+                    containerColor = Color.Transparent,
+                    contentColor = White
+                ),
+                border = ButtonDefaults.outlinedButtonBorder.copy(
+                    width = 1.dp
+                )
+            ) {
+                Text("Logout")
+            }
         }
     }
 }
