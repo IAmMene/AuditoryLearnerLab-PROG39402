@@ -100,30 +100,4 @@ class TTSManager(context: Context) {
         }
     }
 
-//    fun getSpeechFlow() = callbackFlow {
-//        val listener = object : UtteranceProgressListener() {
-//            override fun onStart(utteranceId: String?) {
-//                trySend(TTSEvent.Started(utteranceId))
-//            }
-//
-//            override fun onDone(utteranceId: String?) {
-//                trySend(TTSEvent.Finished(utteranceId))
-//            }
-//
-//            @Deprecated("Deprecated in Java")
-//            override fun onError(utteranceId: String?) {
-//                trySend(TTSEvent.Error(utteranceId))
-//            }
-//
-//            override fun onError(utteranceId: String?, errorCode: Int) {
-//                trySend(TTSEvent.Error(utteranceId))
-//            }
-//        }
-//
-//        tts?.setOnUtteranceProgressListener(listener)
-//
-//        awaitClose {
-//            tts?.setOnUtteranceProgressListener(null)
-//        }
-//    }
 }
