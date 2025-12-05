@@ -66,6 +66,9 @@ fun AppNavGraph(vmAuth: AuthViewModel) {
         }
         // Main Dashboard
         composable(Routes.HOME) {
+            LaunchedEffect(Unit) {
+                vmHome.fetchQuizzes()
+            }
             HomeScreen(
                 onLogout = {
                     vmAuth.logout()

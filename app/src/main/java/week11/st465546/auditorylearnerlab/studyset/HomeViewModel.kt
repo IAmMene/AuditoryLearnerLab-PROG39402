@@ -31,8 +31,9 @@ class HomeViewModel( private val repo: QuizRepo = QuizRepo() ): ViewModel() {
 
     /**
      * Initializer of the Coroutine Flow
+     * This code was removed as it was causing a sign in bug
      */
-    init {
+    /*init {
         // Initialize the real-time stream of user quizzes
         viewModelScope.launch {
             println("🔥 Current UID = ${repo.getCurrentUser()?.uid}") //debugger of the current user id
@@ -42,8 +43,26 @@ class HomeViewModel( private val repo: QuizRepo = QuizRepo() ): ViewModel() {
                 it.forEach { q -> println(q) }
             }
         }
-    }
+    }*/
 
+    private var quizJob: kotlinx.coroutines.Job? = null
+
+    /**
+     * Fetches teh list of quizzes for the currently logged-in user.
+     * This function should be called whenever the Home Screen is displayed
+     */
+    fun fetchQuizzes() {
+        // Cancel any previous connection (e.g. from a different user session)
+        quizJob?.cancel()
+
+        quizJob = viewModelScope.launch {
+            println("🔥 Fetching quizzes for current user...")
+            repo.getUserQuizzes().collect {
+                _quizzes.value = it
+                println("🔥 Quizzes updated: ${it.size}")
+            }
+        }
+    }
     /**
      * Below Code is for the Screens of Creating a Quiz or Taking a Quiz
      */
