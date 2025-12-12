@@ -241,7 +241,7 @@ fun HomeScreen(
                                 // Take Quiz Button
                                 Button(
                                     onClick = { onTakeQuiz(quiz.id) },
-                                    modifier = Modifier.weight(1f),
+                                    modifier = Modifier.weight(0.8f),
                                     colors = ButtonDefaults.buttonColors(
                                         containerColor = GreenPrimary,
                                         contentColor = White
